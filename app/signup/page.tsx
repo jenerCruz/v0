@@ -7,25 +7,25 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 
-const AUTHORIZED_ADMINS = process.env.NEXT_PUBLIC_AUTHORIZED_ADMINS?.split(',') || [
-  'admin@sublistore.com',
-  'admin@example.com',
-]
-
-export default function AdminLoginPage() {
+export default function UserSignupPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
 
-    const normalizedEmail = email.toLowerCase().trim()
-    if (!AUTHORIZED_ADMINS.map((e) => e.toLowerCase().trim()).includes(normalizedEmail)) {
-      setError('Email no autorizado. Contacta al administrador.')
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden')
+      return
+    }
+
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres')
       return
     }
 
@@ -33,9 +33,12 @@ export default function AdminLoginPage() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
+      const { error } = await supabase.auth.signUp({
+        email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
 
       if (error) {
@@ -43,9 +46,9 @@ export default function AdminLoginPage() {
         return
       }
 
-      router.push('/admin')
+      router.push('/signup-success')
     } catch (err) {
-      setError('Error al iniciar sesión')
+      setError('Error al crear la cuenta')
     } finally {
       setLoading(false)
     }
@@ -56,18 +59,18 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
           <h1 className="text-3xl font-bold text-white mb-2">SubliStore</h1>
-          <p className="text-slate-300 mb-8">Panel de Administración</p>
+          <p className="text-slate-300 mb-8">Crear Cuenta</p>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSignup} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Email de Administrador
+                Email
               </label>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@sublistore.com"
+                placeholder="tu@email.com"
                 disabled={loading}
                 className="bg-white/5 border-white/20 text-white placeholder:text-slate-500"
               />
@@ -87,6 +90,20 @@ export default function AdminLoginPage() {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Confirmar Contraseña
+              </label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                disabled={loading}
+                className="bg-white/5 border-white/20 text-white placeholder:text-slate-500"
+              />
+            </div>
+
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
                 <p className="text-red-300 text-sm">{error}</p>
@@ -98,14 +115,21 @@ export default function AdminLoginPage() {
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold h-11 rounded-lg"
             >
-              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </Button>
           </form>
 
           <p className="text-center text-slate-400 text-sm mt-6">
-            ¿Eres usuario?{' '}
+            ¿Ya tienes cuenta?{' '}
             <Link href="/login" className="text-blue-400 hover:text-blue-300">
-              Iniciar sesión como usuario
+              Iniciar sesión
+            </Link>
+          </p>
+
+          <p className="text-center text-slate-500 text-xs mt-4">
+            ¿Eres administrador?{' '}
+            <Link href="/auth/login" className="text-blue-400 hover:text-blue-300">
+              Login de admin
             </Link>
           </p>
         </div>

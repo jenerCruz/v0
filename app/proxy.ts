@@ -1,4 +1,4 @@
-import { updateSession } from '@/lib/supabase/middleware'
+import { updateSession } from '@/lib/supabase/proxy'
 import type { NextRequest } from 'next/server'
 
 // Reemplazo del antiguo middleware

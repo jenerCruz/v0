@@ -7,12 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 
-const AUTHORIZED_ADMINS = process.env.NEXT_PUBLIC_AUTHORIZED_ADMINS?.split(',') || [
-  'admin@sublistore.com',
-  'admin@example.com',
-]
-
-export default function AdminLoginPage() {
+export default function UserLoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,19 +17,12 @@ export default function AdminLoginPage() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
-
-    const normalizedEmail = email.toLowerCase().trim()
-    if (!AUTHORIZED_ADMINS.map((e) => e.toLowerCase().trim()).includes(normalizedEmail)) {
-      setError('Email no autorizado. Contacta al administrador.')
-      return
-    }
-
     setLoading(true)
 
     try {
       const supabase = createClient()
       const { error } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
+        email,
         password,
       })
 
@@ -43,7 +31,7 @@ export default function AdminLoginPage() {
         return
       }
 
-      router.push('/admin')
+      router.push('/')
     } catch (err) {
       setError('Error al iniciar sesión')
     } finally {
@@ -56,18 +44,18 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
           <h1 className="text-3xl font-bold text-white mb-2">SubliStore</h1>
-          <p className="text-slate-300 mb-8">Panel de Administración</p>
+          <p className="text-slate-300 mb-8">Iniciar Sesión</p>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Email de Administrador
+                Email
               </label>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@sublistore.com"
+                placeholder="tu@email.com"
                 disabled={loading}
                 className="bg-white/5 border-white/20 text-white placeholder:text-slate-500"
               />
@@ -103,9 +91,16 @@ export default function AdminLoginPage() {
           </form>
 
           <p className="text-center text-slate-400 text-sm mt-6">
-            ¿Eres usuario?{' '}
-            <Link href="/login" className="text-blue-400 hover:text-blue-300">
-              Iniciar sesión como usuario
+            ¿No tienes cuenta?{' '}
+            <Link href="/signup" className="text-blue-400 hover:text-blue-300">
+              Crear cuenta
+            </Link>
+          </p>
+
+          <p className="text-center text-slate-500 text-xs mt-4">
+            ¿Eres administrador?{' '}
+            <Link href="/auth/login" className="text-blue-400 hover:text-blue-300">
+              Login de admin
             </Link>
           </p>
         </div>
